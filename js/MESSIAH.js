@@ -1942,8 +1942,6 @@ function checkCollisions(dt) {
   
   // 플레이어 투사체와 보스 충돌 검사
   if (BossSystem && BossSystem.activeBosses && playerProjectiles.length > 0) {
-    const playerHitbox = CollisionSystem.getHitbox(Player, 'player');
-    
     for (const boss of BossSystem.activeBosses) {
       if (!boss || boss.hp <= 0) continue;
       
@@ -2012,26 +2010,32 @@ function checkCollisions(dt) {
           }
         }
       }
+    }
+  }
+  
+  // 플레이어와 보스 충돌 검사 (일반 적 충돌 검사와 동일한 히트박스 방식, 적 Power 돌진 로직과 동일)
+  if (BossSystem && BossSystem.activeBosses) {
+    const playerHitbox = CollisionSystem.getHitbox(Player, 'player');
+    
+    for (const boss of BossSystem.activeBosses) {
+      if (!boss || boss.hp <= 0) continue;
       
-      // 플레이어와 보스 충돌 검사 (일반 적 충돌 검사와 동일한 히트박스 방식)
-      const hitBoss = CollisionSystem.checkPlayerBossCollision(Player, BossSystem.activeBosses);
-      if (hitBoss && hitBoss === boss && !Player.isInvincible) {
-        // 미카엘 대쉬 중일 때는 쿨타임을 짧게 설정하여 연속 데미지 가능
-        const isMichaelDashing = boss.name === 'michael' && boss.isDashing;
-        const cooldownCheck = isMichaelDashing ? boss.contactDamageCooldown <= 0.1 : boss.contactDamageCooldown <= 0;
-        
-        if (cooldownCheck) {
-          // 미카엘 대쉬 중일 때 데미지 증가
-          let damage = boss.damage;
-          if (isMichaelDashing) {
-            damage = boss.damage * 5; // 대쉬 중 데미지 5배 증가
-          }
-          const isDead = Player.takeDamage(damage);
-          // 대쉬 중일 때는 쿨타임을 짧게 설정 (0.1초), 일반 상태는 1초
-          boss.contactDamageCooldown = isMichaelDashing ? 0.1 : 1.0;
-          if (isDead) {
-            handleGameOver('플레이어가 사망했습니다.');
-          }
+      const bossHitbox = CollisionSystem.getHitbox(boss, 'boss');
+      
+      if (CollisionSystem.checkAABB(
+        playerHitbox.x, playerHitbox.y, playerHitbox.w, playerHitbox.h,
+        bossHitbox.x, bossHitbox.y, bossHitbox.w, bossHitbox.h
+      ) && !Player.isInvincible && boss.contactDamageCooldown <= 0) {
+        // 미카엘 대쉬 중일 때 데미지
+        let damage = boss.damage;
+        if (boss.name === 'michael' && boss.isDashing) {
+          damage = 40; // 대쉬 중 데미지 40
+        }
+        const isDead = Player.takeDamage(damage);
+        // 일반 상태와 동일하게 1초 쿨타임 설정 (적 Power와 동일)
+        boss.contactDamageCooldown = 1.0;
+        if (isDead) {
+          handleGameOver('플레이어가 사망했습니다.');
         }
       }
     }

@@ -104,10 +104,7 @@ const ResourceLoader = {
       }
     });
     
-    // 일반 적 단일 이미지 (스프라이트 없는 타입)
-    paths.push('images/enemy/fiend/fiend.png');
-    paths.push('images/enemy/cultist/cultist.png');
-    paths.push('images/enemy/nightmare/nightmare.png');
+    // 일반 적 단일 이미지 (스프라이트 없는 타입) - 지옥의 적들은 삭제됨
     
     // 이펙트 이미지
     // Quake 스프라이트

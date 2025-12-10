@@ -148,42 +148,28 @@ const CollisionSystem = {
   },
   
   /**
-   * 플레이어와 보스 충돌 검사 (공간 분할 최적화, 일반 적 충돌 검사와 동일한 방식)
+   * 플레이어와 보스 충돌 검사 (일반 적 충돌 검사와 동일한 히트박스 방식)
    */
   checkPlayerBossCollision(player, bosses) {
     if (!player || !bosses || bosses.length === 0) return null;
     
-    const playerGrid = this.worldToGrid(player.x, player.y);
     const playerHitbox = this.getHitbox(player, 'player');
     
-    // 주변 그리드 셀만 검사 (3x3)
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const gx = playerGrid.x + dx;
-        const gy = playerGrid.y + dy;
-        
-        if (gx < 0 || gx >= this.gridCols || gy < 0 || gy >= this.gridRows) continue;
-        
-        const cell = this.grid[gy][gx];
-        
-        // 보스도 enemies 배열에 등록되어 있음
-        for (const boss of cell.enemies) {
-          // 보스인지 확인 (hp 속성으로 구분)
-          if (!boss.hp || boss.hp <= 0) continue;
-          
-          // 거리 기반 빠른 필터링
-          const maxDist = (playerHitbox.w + this.getHitbox(boss, 'boss').w) / 2 + 50;
-          if (!this.checkDistance(player.x, player.y, boss.x, boss.y, maxDist)) continue;
-          
-          // AABB 충돌 검사
-          const bossHitbox = this.getHitbox(boss, 'boss');
-          if (this.checkAABB(
-            playerHitbox.x, playerHitbox.y, playerHitbox.w, playerHitbox.h,
-            bossHitbox.x, bossHitbox.y, bossHitbox.w, bossHitbox.h
-          )) {
-            return boss;
-          }
-        }
+    // bosses 배열을 직접 순회 (그리드 대신)
+    for (const boss of bosses) {
+      if (!boss || boss.hp <= 0) continue;
+      
+      // 거리 기반 빠른 필터링
+      const bossHitbox = this.getHitbox(boss, 'boss');
+      const maxDist = (playerHitbox.w + bossHitbox.w) / 2 + 50;
+      if (!this.checkDistance(player.x, player.y, boss.x, boss.y, maxDist)) continue;
+      
+      // AABB 충돌 검사
+      if (this.checkAABB(
+        playerHitbox.x, playerHitbox.y, playerHitbox.w, playerHitbox.h,
+        bossHitbox.x, bossHitbox.y, bossHitbox.w, bossHitbox.h
+      )) {
+        return boss;
       }
     }
     

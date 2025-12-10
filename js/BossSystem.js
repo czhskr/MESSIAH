@@ -263,6 +263,7 @@ const BossSystem = {
       landingShakeTimer: 0, // 착지 후 흔들림 타이머
       diveStartX: 0, // 도약 시작 위치 X
       diveStartY: 0, // 도약 시작 위치 Y
+      diveDamageApplied: false, // 스킬2 낙하 데미지 적용 여부 (착지 시점에만 적용)
       
       // 스킬 순서 관리
       lastSkillIndex: -1,
@@ -478,6 +479,7 @@ const BossSystem = {
         boss.diveTimer = 0;
         boss.isHidden = false;
         boss.isDivingDown = false;
+        boss.diveDamageApplied = false; // 낙하 데미지 플래그 초기화
         boss.currentSkill = null;
         boss.isDiving = false;
         boss.skillCooldown = boss.skillCooldownMax;
@@ -549,6 +551,7 @@ const BossSystem = {
           boss.y = targetY;
           boss.isDivingDown = false;
           boss.landingShakeTimer = 3.0; // 착지 후 3초간 흔들림
+          boss.diveDamageApplied = false; // 낙하 데미지 플래그 초기화
           
           if (Camera && GameSettings && GameSettings.screenShake) {
             Camera.shake(20, 0.5);
@@ -626,6 +629,7 @@ const BossSystem = {
         boss.circleWarningTimer = 0;
         boss.circleWarningX = 0;
         boss.circleWarningY = 0;
+        boss.diveDamageApplied = false; // 낙하 데미지 플래그 초기화
         // 도약 시작 위치 저장
         boss.diveStartX = boss.x;
         boss.diveStartY = boss.y;
@@ -641,6 +645,8 @@ const BossSystem = {
     boss.dashTimer = 0.9;
     boss.useMoveImage = true;
     boss.isDashImageActive = true;
+    // 돌진 시작 시 접촉 데미지 쿨타임 초기화 (적 Power와 동일)
+    boss.contactDamageCooldown = 0;
     const dx1 = Player.x - boss.x;
     const dy1 = Player.y - boss.y;
     const dist1Sq = dx1 * dx1 + dy1 * dy1;
@@ -680,8 +686,9 @@ const BossSystem = {
     const radius = boss.currentSkill === 'diveAttackEnhanced' ? this.CIRCLE_WARNING_RADIUS : 200;
     const projectileCount = 16;
     
-    const targetX = boss.currentSkill === 'diveAttackEnhanced' ? boss.circleWarningX : Player.x;
-    const targetY = boss.currentSkill === 'diveAttackEnhanced' ? boss.circleWarningY : Player.y;
+    // 착지 시점의 실제 위치 사용 (스킬2의 경우 착지 위치, 일반 다이브는 플레이어 위치)
+    const targetX = boss.currentSkill === 'diveAttackEnhanced' ? boss.x : Player.x;
+    const targetY = boss.currentSkill === 'diveAttackEnhanced' ? boss.y : Player.y;
     
     for (let i = 0; i < projectileCount; i++) {
       const angle = (Math.PI * 2 / projectileCount) * i;
@@ -691,20 +698,34 @@ const BossSystem = {
       );
     }
     
-    // 범위 내 플레이어에게 데미지 (원 표시 안에만 적용)
-    const dx = Player.x - targetX;
-    const dy = Player.y - targetY;
-    const distSq = dx * dx + dy * dy;
-    const radiusSq = radius * radius;
-    // 정확히 원 표시 반지름 내에만 데미지 적용
-    if (distSq <= radiusSq && !Player.isInvincible) {
-      const isDead = Player.takeDamage(boss.damage * 2);
-      if (isDead && handleGameOver) {
-        handleGameOver('플레이어가 사망했습니다.');
+    // 범위 내 플레이어에게 데미지 (원 표시 안에만 적용, 착지 시점에만 한 번만 데미지 적용)
+    // 스킬2의 경우 착지 직후에만 한 번만 데미지 적용
+    if (boss.currentSkill === 'diveAttackEnhanced' && !boss.diveDamageApplied) {
+      const dx = Player.x - targetX;
+      const dy = Player.y - targetY;
+      const distSq = dx * dx + dy * dy;
+      const radiusSq = radius * radius;
+      // 정확히 원 표시 반지름 내에만 데미지 적용
+      if (distSq <= radiusSq && !Player.isInvincible) {
+        const isDead = Player.takeDamage(boss.damage * 2);
+        if (isDead && handleGameOver) {
+          handleGameOver('플레이어가 사망했습니다.');
+        }
       }
-    }
-    
-    if (boss.currentSkill !== 'diveAttackEnhanced') {
+      // 데미지 적용 플래그 설정 (한 번만 적용)
+      boss.diveDamageApplied = true;
+    } else if (boss.currentSkill !== 'diveAttackEnhanced') {
+      // 일반 다이브 공격
+      const dx = Player.x - targetX;
+      const dy = Player.y - targetY;
+      const distSq = dx * dx + dy * dy;
+      const radiusSq = radius * radius;
+      if (distSq <= radiusSq && !Player.isInvincible) {
+        const isDead = Player.takeDamage(boss.damage * 2);
+        if (isDead && handleGameOver) {
+          handleGameOver('플레이어가 사망했습니다.');
+        }
+      }
       boss.isDiving = false;
     }
   },

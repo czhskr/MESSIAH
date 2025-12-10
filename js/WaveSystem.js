@@ -19,10 +19,7 @@ const WaveSystem = {
   enemySpawnTimers: {
     malakh: 0,    // 말라크: 5초마다 (4 + 웨이브)마리
     power: 0,     // 파워: 5초마다 (0 + 웨이브)마리
-    dominion: 0,  // 도미니온: 10초마다 (1 + 웨이브)마리
-    fiend: 0,     // 핀드: 5초마다 (4 + 웨이브)마리
-    cultist: 0,   // 컬티스트: 5초마다 (0 + 웨이브)마리
-    nightmare: 0  // 나이트메어: 10초마다 (1 + 웨이브)마리
+    dominion: 0   // 도미니온: 10초마다 (1 + 웨이브)마리
   },
   
   // 스폰 예정 적 목록 (등장 표시용)
@@ -44,10 +41,7 @@ const WaveSystem = {
     this.enemySpawnTimers = {
       malakh: 0,
       power: 0,
-      dominion: 0,
-      fiend: 0,
-      cultist: 0,
-      nightmare: 0
+      dominion: 0
     };
     
     // 스테이지별 최대 웨이브 설정
@@ -86,10 +80,7 @@ const WaveSystem = {
     this.enemySpawnTimers = {
       malakh: 0,
       power: 0,
-      dominion: 0,
-      fiend: 0,
-      cultist: 0,
-      nightmare: 0
+      dominion: 0
     };
     
     // 스테이지별 최대 웨이브 업데이트
@@ -158,45 +149,6 @@ const WaveSystem = {
         const spawn = this.createSpawnPoint('dominion', spawnRadius, spawnDelay);
         if (spawn) {
           this.pendingSpawns.push(spawn);
-        }
-      }
-    }
-    
-    // 악마 적 (지옥 배경)
-    if (backgroundType === 'hell') {
-      // 핀드: 5초마다 (4 + 웨이브)마리 (웨이브 1: 5마리, 웨이브 2: 6마리, ...)
-      if (this.enemySpawnTimers.fiend <= 0) {
-        this.enemySpawnTimers.fiend = 5.0; // 타이머 리셋
-        const count = 4 + wave;
-        for (let i = 0; i < count; i++) {
-          const spawn = this.createSpawnPoint('fiend', spawnRadius, spawnDelay);
-          if (spawn) {
-            this.pendingSpawns.push(spawn);
-          }
-        }
-      }
-      
-      // 컬티스트: 5초마다 (0 + 웨이브)마리 (웨이브 1: 1마리, 웨이브 2: 2마리, ...)
-      if (this.enemySpawnTimers.cultist <= 0) {
-        this.enemySpawnTimers.cultist = 5.0; // 타이머 리셋
-        const count = 0 + wave;
-        for (let i = 0; i < count; i++) {
-          const spawn = this.createSpawnPoint('cultist', spawnRadius, spawnDelay);
-          if (spawn) {
-            this.pendingSpawns.push(spawn);
-          }
-        }
-      }
-      
-      // 나이트메어: 10초마다 (1 + 웨이브)마리 (웨이브 1: 2마리, 웨이브 2: 3마리, ...)
-      if (this.enemySpawnTimers.nightmare <= 0) {
-        this.enemySpawnTimers.nightmare = 10.0; // 타이머 리셋
-        const count = 1 + wave;
-        for (let i = 0; i < count; i++) {
-          const spawn = this.createSpawnPoint('nightmare', spawnRadius, spawnDelay);
-          if (spawn) {
-            this.pendingSpawns.push(spawn);
-          }
         }
       }
     }
@@ -278,9 +230,6 @@ const WaveSystem = {
       this.enemySpawnTimers.malakh -= dt;
       this.enemySpawnTimers.power -= dt;
       this.enemySpawnTimers.dominion -= dt;
-      this.enemySpawnTimers.fiend -= dt;
-      this.enemySpawnTimers.cultist -= dt;
-      this.enemySpawnTimers.nightmare -= dt;
       
       // 주기적 스폰 스케줄링
       this.scheduleEnemySpawns();

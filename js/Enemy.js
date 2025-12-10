@@ -76,68 +76,6 @@ const Enemy = {
       frameDuration: 0.25,
       scale: 1.5
     },
-    // 악마 (Devil)
-    fiend: {
-      name: '핀드',
-      category: 'devil',
-      baseHp: 35,
-      baseDamage: 6,
-      baseSpeed: 165, // 이동 속도 (빠르게)
-      baseGold: 2,
-      exp: 6,
-      width: 100, // 충돌 판정 크기
-      height: 100, // 충돌 판정 크기
-      renderSize: 150, // 렌더링 크기(정사각)
-      color: '#ff6666',
-      attackRange: 40,
-      attackCooldown: 1.5,
-      imagePath: 'images/enemy/fiend/fiend',
-      spritePath: 'images/enemy/fiend/',
-      spriteFrameCount: 0, // 스프라이트 없음, 단일 이미지 사용
-      frameDuration: 0.25
-    },
-    cultist: {
-      name: '컬티스트',
-      category: 'devil',
-      baseHp: 25,
-      baseDamage: 4,
-      baseSpeed: 0, // 이동속도 0
-      baseGold: 3,
-      exp: 8,
-      width: 100, // 충돌 판정 크기
-      height: 100, // 충돌 판정 크기
-      renderSize: 150, // 렌더링 크기(정사각)
-      color: '#ff0000',
-      attackRange: 500, // 원거리 공격 범위
-      attackCooldown: 2.0, // 탄막 발사 쿨타임
-      projectileCount: 3, // 탄막 개수
-      imagePath: 'images/enemy/cultist/cultist',
-      spritePath: 'images/enemy/cultist/',
-      spriteFrameCount: 0, // 스프라이트 없음, 단일 이미지 사용
-      frameDuration: 0.25
-    },
-    nightmare: {
-      name: '나이트메어',
-      category: 'devil',
-      baseHp: 50,
-      baseDamage: 8,
-      baseSpeed: 195, // 이동 속도 (빠르게)
-      baseGold: 4,
-      exp: 10,
-      width: 100, // 충돌 판정 크기
-      height: 100, // 충돌 판정 크기
-      renderSize: 150, // 렌더링 크기(정사각)
-      color: '#6600ff',
-      attackRange: 40,
-      attackCooldown: 1.5,
-      chargeCooldown: 3.0, // 돌진 쿨타임 (3초)
-      chargeSpeed: 1000, // 돌진 속도
-      chargeDuration: 0.8, // 돌진 지속 시간
-      imagePath: 'images/enemy/nightmare/nightmare',
-      spritePath: 'images/enemy/nightmare/',
-      spriteFrameCount: 0, // 스프라이트 없음, 단일 이미지 사용
-      frameDuration: 0.25
-    }
   },
   
   // 오프스크린 캔버스 (이미지 여백 제거 및 틴트 효과용)
@@ -300,17 +238,12 @@ const Enemy = {
     enemy.hpBarTimer = 0;
     enemy.showHpBar = false;
     
-    // 돌진 초기화 (Power 타입 또는 Nightmare 타입)
-    if (type === 'power' || type === 'nightmare') {
+    // 돌진 초기화 (Power 타입)
+    if (type === 'power') {
       enemy.chargeCooldown = typeData.chargeCooldown || 3.0;
       enemy.chargeDuration = typeData.chargeDuration || 1.5; // 돌진 지속 시간
       enemy.chargeTimer = enemy.chargeCooldown;
       enemy.isCharging = false;
-    }
-    
-    // 원거리 공격 초기화 (Cultist 타입)
-    if (type === 'cultist') {
-      enemy.projectileCount = typeData.projectileCount || 3;
     }
     
     // 스프라이트 로드 (비동기)
@@ -460,9 +393,9 @@ const Enemy = {
         enemy.hitShakeTimer = Math.max(0, enemy.hitShakeTimer - dt);
       }
       
-      // 특수 공격 전 틴트 효과 (파워/나이트메어의 돌진 등)
+      // 특수 공격 전 틴트 효과 (파워의 돌진 등)
       // 일반 충돌 데미지는 틴트 효과 없음
-      if ((enemy.type === 'power' || enemy.type === 'nightmare') && !enemy.isCharging && enemy.chargeTimer <= 0.5 && enemy.chargeTimer > 0) {
+      if (enemy.type === 'power' && !enemy.isCharging && enemy.chargeTimer <= 0.5 && enemy.chargeTimer > 0) {
         // 돌진 준비 중 틴트 효과
         enemy.isTinted = true;
         enemy.tintTimer = 0.5;
@@ -497,29 +430,8 @@ const Enemy = {
       // HP 게이지바 사용 안 함
       enemy.showHpBar = false;
       
-      // Cultist 타입: 원거리 탄막 발사 (이동하지 않음)
-      if (enemy.type === 'cultist') {
-        // 이동하지 않음 (speed가 0)
-        // attackTimer가 0 이하이고 플레이어가 공격 범위 내에 있으면 발사
-        const attackRangeSq = enemy.attackRange * enemy.attackRange;
-        if (enemy.attackTimer <= 0 && distSq <= attackRangeSq && distSq > 0) {
-          // 탄막 발사
-          enemy.attackTimer = enemy.attackCooldown;
-          const projectileCount = enemy.projectileCount || 3;
-          const baseAngle = Math.atan2(dy, dx);
-          
-          for (let i = 0; i < projectileCount; i++) {
-            const spread = (i - (projectileCount - 1) / 2) * 0.3; // 각도 분산
-            const angle = baseAngle + spread;
-            Projectile.spawn(
-              enemy.x, enemy.y, angle,
-              300, enemy.damage, 'enemy'
-            );
-          }
-        }
-      }
-      // Power/Nightmare 타입: 돌진 처리
-      else if (enemy.type === 'power' || enemy.type === 'nightmare') {
+      // Power 타입: 돌진 처리
+      if (enemy.type === 'power') {
         enemy.chargeTimer -= dt;
         
         if (!enemy.isCharging && enemy.chargeTimer <= 0 && dist > enemy.attackRange) {
