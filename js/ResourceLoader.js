@@ -228,7 +228,7 @@ const ResourceLoader = {
       loadingText.textContent = '로딩 완료!';
     }
     
-    // 1초 후 로딩 컨테이너 숨기고 게임시작 버튼만 표시 후 자동 클릭
+    // 1초 후 로딩 컨테이너 숨기고 게임시작 버튼만 표시
     setTimeout(() => {
       // 로딩 컨테이너 숨기기 (텍스트와 게이지바 모두 포함)
       const loadingContainer = document.getElementById('loadingContainer');
@@ -236,20 +236,16 @@ const ResourceLoader = {
         loadingContainer.style.display = 'none';
       }
       
-      // 게임 시작 버튼만 표시 (텍스트: "스테이지 선택")
+      // 게임 시작 버튼만 표시
       const startBtn = document.getElementById('startBtn');
       if (startBtn) {
         startBtn.disabled = false;
-        startBtn.textContent = '스테이지 선택';
+        startBtn.textContent = '게임시작';
         startBtn.style.display = 'block';
         startBtn.style.opacity = '0';
         startBtn.style.transition = 'opacity 0.3s';
         setTimeout(() => {
           startBtn.style.opacity = '1';
-          // 버튼이 표시된 후 자동으로 클릭
-          setTimeout(() => {
-            startBtn.click();
-          }, 300);
         }, 10);
       }
     }, 1000);

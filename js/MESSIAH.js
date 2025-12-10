@@ -371,34 +371,46 @@ function setupUI() {
   }
   
   // 타이틀 화면 - 게임시작 버튼 클릭 시 다른 버튼들 표시
+  let gameStartButtonClicked = false;
   document.getElementById('startBtn').addEventListener('click', () => {
     startTitleBgm();
     
-    // 도움말과 옵션 버튼 표시
-    const helpBtn = document.getElementById('helpBtn');
-    const optionBtn = document.getElementById('optionBtn');
-    
-    if (helpBtn && helpBtn.style.display === 'none') {
-      helpBtn.style.display = 'block';
-      helpBtn.style.opacity = '0';
-      helpBtn.style.transition = 'opacity 0.3s';
-      setTimeout(() => {
-        helpBtn.style.opacity = '1';
-      }, 10);
+    // 첫 클릭 시에만 버튼들 표시
+    if (!gameStartButtonClicked) {
+      gameStartButtonClicked = true;
+      
+      // 게임시작 버튼 텍스트를 "스테이지 선택"으로 변경
+      const startBtn = document.getElementById('startBtn');
+      if (startBtn) {
+        startBtn.textContent = '스테이지 선택';
+      }
+      
+      // 도움말과 옵션 버튼 표시
+      const helpBtn = document.getElementById('helpBtn');
+      const optionBtn = document.getElementById('optionBtn');
+      
+      if (helpBtn && helpBtn.style.display === 'none') {
+        helpBtn.style.display = 'block';
+        helpBtn.style.opacity = '0';
+        helpBtn.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+          helpBtn.style.opacity = '1';
+        }, 10);
+      }
+      
+      if (optionBtn && optionBtn.style.display === 'none') {
+        optionBtn.style.display = 'block';
+        optionBtn.style.opacity = '0';
+        optionBtn.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+          optionBtn.style.opacity = '1';
+        }, 10);
+      }
+    } else {
+      // 두 번째 클릭부터는 스테이지 선택 화면으로 이동
+      showScreen('stageSelect');
+      updateStageList();
     }
-    
-    if (optionBtn && optionBtn.style.display === 'none') {
-      optionBtn.style.display = 'block';
-      optionBtn.style.opacity = '0';
-      optionBtn.style.transition = 'opacity 0.3s';
-      setTimeout(() => {
-        optionBtn.style.opacity = '1';
-      }, 10);
-    }
-    
-    // 스테이지 선택 화면으로 이동
-    showScreen('stageSelect');
-    updateStageList();
   });
   
   // 옵션 버튼
