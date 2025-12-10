@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MESSIAH</title>
+  <link rel="icon" href="images/logo.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 타이틀 화면 -->
+  <div id="titleScreen" class="screen">
+    <div class="title-content">
+      <div class="game-logo" style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);">
+        <img src="images/logo.png" alt="MESSIAH" style="max-width: 1320px; width: 100%; height: auto;">
+      </div>
+      <div id="loadingContainer" style="position: absolute; top: 65%; left: 50%; transform: translateX(-50%); margin-top: 0;">
+        <div id="loadingText" style="margin-bottom: 10px; text-align: center;">리소스 로딩 중...</div>
+        <div style="width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; margin: 0 auto;">
+          <div id="loadingProgressBar" style="width: 0%; height: 100%; background: #4a90e2; transition: width 0.3s;"></div>
+        </div>
+        <div id="loadingProgress" style="margin-top: 5px; text-align: center;">0%</div>
+      </div>
+      <div class="title-buttons" style="position: absolute; top: 65%; left: 50%; transform: translateX(-50%);">
+        <button id="helpBtn" class="btn-secondary" style="display: none; opacity: 0;">도움말</button>
+        <button id="startBtn" class="btn-primary" disabled style="display: none; opacity: 0;">로딩 중...</button>
+        <button id="optionBtn" class="btn-secondary" style="display: none; opacity: 0;">옵션</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 옵션 화면 -->
+  <div id="optionScreen" class="screen overlay" style="display: none;">
+    <div class="option-content">
+      <h2>옵션</h2>
+      <div class="option-section">
+        <h3>사운드</h3>
+        <div class="option-item">
+          <label>BGM 볼륨</label>
+          <input type="range" id="bgmVolume" min="0" max="100" value="50">
+          <span id="bgmVolumeValue">50%</span>
+        </div>
+        <div class="option-item">
+          <label>SFX 볼륨</label>
+          <input type="range" id="sfxVolume" min="0" max="100" value="50">
+          <span id="sfxVolumeValue">50%</span>
+        </div>
+      </div>
+      <div class="option-section">
+        <h3>게임플레이</h3>
+        <div class="option-item">
+          <label>화면 흔들림</label>
+          <input type="checkbox" id="screenShakeToggle" checked>
+          <span id="screenShakeStatus">켜짐</span>
+        </div>
+      </div>
+      <button id="closeOptionBtn" class="btn-primary">닫기</button>
+    </div>
+  </div>
+
+  <!-- 도움말 화면 -->
+  <div id="helpScreen" class="screen overlay" style="display: none;">
+    <div class="help-content">
+      <h2>도움말</h2>
+      <div class="help-section">
+        <h3>조작법</h3>
+        <ul>
+          <li><strong>WASD</strong>: 이동</li>
+          <li><strong>스페이스바</strong>: 회피</li>
+          <li><strong>ESC</strong>: 게임 메뉴</li>
+          <li><strong>Shift</strong>: 히트박스 표시</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h3>게임 플레이</h3>
+        <ul>
+          <li>같은 무기와 등급을 합체하여 등급을 올릴 수 있습니다</li>
+          <li>엔트로피: 적 30마리 처치마다 +1, 스테이지가 끝나도 누적되며 업그레이드 비용으로 사용됩니다</li>
+        </ul>
+      </div>
+      <button id="closeHelpBtn" class="btn-primary">닫기</button>
+    </div>
+  </div>
+
+  <!-- 스테이지 선택 화면 -->
+  <div id="stageSelectScreen" class="screen" style="display: none;">
+    <div class="stage-content">
+      <h2>스테이지 선택</h2>
+      <div id="stageList" class="stage-list"></div>
+      <button id="upgradeBtn" class="btn-secondary">업그레이드</button>
+      <button id="backToTitleBtn" class="btn-secondary">타이틀로</button>
+    </div>
+  </div>
+
+  <!-- 업그레이드 화면 -->
+  <div id="upgradeScreen" class="screen" style="display: none;">
+    <div class="upgrade-content">
+      <h2>업그레이드</h2>
+      <div class="currency-display">
+        <span>엔트로피: <span id="goldAmount">0</span></span>
+      </div>
+      <div class="upgrade-layout">
+        <div id="upgradeList" class="upgrade-list"></div>
+        <div id="playerStatsDisplay" class="player-stats-display"></div>
+      </div>
+      <button id="backToStageBtn" class="btn-secondary">스테이지 선택으로</button>
+    </div>
+  </div>
+
+  <!-- 게임 화면 -->
+  <div id="gameScreen" class="screen" style="display: none;">
+    <canvas id="gameCanvas" width="1200" height="600"></canvas>
+    <!-- 테스트 스테이지용 버튼 -->
+    <div id="testStageButtons" class="test-stage-buttons" style="display: none; position: absolute; top: 10px; right: 10px; z-index: 1000; flex-direction: column; gap: 10px;">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: rgba(0,0,0,0.7); padding: 8px; border-radius: 6px;">
+        <button class="test-btn" id="testAddWeapon_seraphic-edge" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">세라픽 엣지</button>
+        <button class="test-btn" id="testAddWeapon_vorpal-sword" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">보팔 소드</button>
+        <button class="test-btn" id="testAddWeapon_durandal" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">뒤랑달</button>
+        <button class="test-btn" id="testAddWeapon_estoc" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">에스톡</button>
+        <button class="test-btn" id="testAddWeapon_morning-star" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">모닝스타</button>
+        <button class="test-btn" id="testAddWeapon_guillotine" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">기요틴</button>
+        <button class="test-btn" id="testAddWeapon_longinus" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">롱기누스</button>
+        <button class="test-btn" id="testAddReviveBtn" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">부활 +1</button>
+        <button class="test-btn" id="testAddDashBtn" style="padding: 8px 10px; background: #4a90e2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">대쉬 +1</button>
+        <button class="test-btn" id="testSpawnBossBtn" style="padding: 8px 10px; background: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">보스 소환</button>
+      </div>
+    </div>
+    <div class="game-ui">
+      <!-- 보스 체력바 -->
+      <div id="bossHealthBar" style="display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 400px; background: rgba(0, 0, 0, 0.7); border: 2px solid #fff; border-radius: 5px; padding: 10px; z-index: 1000;">
+        <div style="color: #fff; font-size: 18px; font-weight: bold; margin-bottom: 5px; text-align: center;" id="bossNameText"></div>
+        <div style="width: 100%; height: 20px; background: rgba(255, 255, 255, 0.3); border-radius: 3px; overflow: hidden;">
+          <div id="bossHealthFill" style="height: 100%; background: #ff0000; transition: width 0.3s; width: 100%;"></div>
+        </div>
+        <div style="color: #fff; font-size: 14px; margin-top: 5px; text-align: center;" id="bossHealthText"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 정산 화면 -->
+  <div id="settlementScreen" class="screen overlay" style="display: none;">
+    <div class="settlement-content">
+      <h2>웨이브 정산</h2>
+      <div class="settlement-info">
+        <p>스킬포인트: <span id="settlementSkillPoints">0</span></p>
+        <p>금화: <span id="settlementGold">0</span></p>
+      </div>
+      <div id="upgradeChoices" class="upgrade-choices"></div>
+      <div class="settlement-actions">
+        <button id="refreshUpgradesBtn" class="btn-secondary">업그레이드 초기화</button>
+        <button id="refreshSkillsBtn" class="btn-secondary" style="display: none;">무기 초기화</button>
+        <button id="continueBtn" class="btn-primary" style="display: none;">계속하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 레벨업 화면 (무기 선택) -->
+  <div id="levelUpScreen" class="screen overlay" style="display: none;">
+    <div class="levelup-content">
+      <div class="skill-selection-layout">
+        <!-- 좌측: 스탯 -->
+        <div class="skill-selection-left">
+          <h3>플레이어 스탯</h3>
+          <div id="skillSelectionStatsDisplay" class="stats-display"></div>
+        </div>
+        <!-- 우측: 무기 선택 및 슬롯 -->
+        <div class="skill-selection-right">
+          <!-- 우측 상단: 무기 선택 -->
+          <div class="skill-selection-top">
+            <div id="skillChoices" class="skill-choices"></div>
+            <div class="skill-actions">
+              <button id="refreshSkillChoicesBtn" class="btn-secondary">초기화</button>
+              <button id="startWaveBtn" class="btn-primary" style="display: none;">웨이브 시작</button>
+            </div>
+          </div>
+          <!-- 우측 하단: 슬롯 -->
+          <div class="skill-selection-bottom">
+            <h3>보유 무기</h3>
+            <div id="weaponSlotsDisplay" class="weapons-display"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 메뉴 화면 (ESC) -->
+  <div id="gameMenuScreen" class="screen overlay" style="display: none;">
+    <div class="game-menu-content">
+      <h2>게임 메뉴</h2>
+      <div class="game-menu-stats">
+        <h3>플레이어 스탯</h3>
+        <div id="gameMenuStatsDisplay" class="stats-display"></div>
+        <h3>보유 무기</h3>
+        <div class="weapons-display" id="weaponsDisplay"></div>
+      </div>
+      <div class="game-menu-actions">
+        <button id="resumeBtn" class="btn-primary">계속하기</button>
+        <button id="toTitleFromMenuBtn" class="btn-secondary">타이틀로</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 오버/클리어 화면 -->
+  <div id="gameOverScreen" class="screen overlay" style="display: none;">
+    <div class="gameover-content">
+      <p id="gameOverMessage"></p>
+      <button id="toTitleBtn" class="btn-secondary">타이틀로</button>
+    </div>
+  </div>
+
+  <!-- 스크립트 로드 -->
+  <script src="js/GameState.js"></script>
+  <script src="js/ResourceLoader.js"></script>
+  <script src="js/InputManager.js"></script>
+  <script src="js/MapSystem.js"></script>
+  <script src="js/CollisionSystem.js"></script>
+  <script src="js/Projectile.js"></script>
+  <script src="js/Player.js"></script>
+  <script src="js/Enemy.js"></script>
+  <script src="js/BossSystem.js"></script>
+  <script src="js/WaveSystem.js"></script>
+  <script src="js/SettlementSystem.js"></script>
+  <script src="js/SkillSystem.js"></script>
+  <script src="js/SpeechBubble.js"></script>
+  <script src="js/UpgradeSystem.js"></script>
+  <script src="js/MESSIAH.js"></script>
+</body>
+</html>
+
