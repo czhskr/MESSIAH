@@ -579,14 +579,7 @@ const BossSystem = {
       }
     }
     
-    // 맵 경계 체크 (미카엘 다이브 중에는 경계 클램핑을 건너뜀)
-    const skipBounds = boss.name === 'michael' && boss.currentSkill === 'diveAttackEnhanced' &&
-      (boss.isDiving || boss.isDivingDown || boss.isHidden);
-    if (!skipBounds) {
-      const bounds = MapSystem.checkBounds(boss.x, boss.y, boss.width, boss.height);
-      boss.x = bounds.x;
-      boss.y = bounds.y;
-    }
+    // 맵 경계 체크 제거 (미카엘은 경계를 넘을 수 있음)
     
     // 그리드에 등록
     if (CollisionSystem) {

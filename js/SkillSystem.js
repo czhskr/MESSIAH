@@ -304,6 +304,7 @@ const SkillSystem = {
       fireSpeed: 800,
       returnSpeed: 1000,
       cooldownTimer: 0,
+      hitCooldowns: new Map(), // 적별 히트 쿨타임 (적 객체를 키로 사용)
       image: null // 이미지는 나중에 로드
     };
     
@@ -461,6 +462,7 @@ const SkillSystem = {
         fireSpeed: 800,
         returnSpeed: 1000,
         cooldownTimer: 0,
+        hitCooldowns: new Map(), // 적별 히트 쿨타임 (적 객체를 키로 사용)
         image: null, // 무기 이미지
         rotationAngle: 0 // 회전 각도 (기요틴 등 회전 무기용)
     };
@@ -1029,6 +1031,17 @@ const SkillSystem = {
           skill.cooldownTimer -= dt;
         }
         
+        // 적별 히트 쿨타임 업데이트
+        if (skill.hitCooldowns) {
+          for (const [enemy, cooldown] of skill.hitCooldowns.entries()) {
+            if (cooldown <= 0 || !enemy.active || enemy.isDead) {
+              skill.hitCooldowns.delete(enemy);
+            } else {
+              skill.hitCooldowns.set(enemy, cooldown - dt);
+            }
+          }
+        }
+        
         // 발사 중이 아닐 때 초기 위치 계산
         if (!skill.isFired) {
           const baseAngle = skill.angle;
@@ -1213,6 +1226,12 @@ const SkillSystem = {
         for (const enemy of Enemy.activeEnemies) {
           if (!enemy.active || enemy.isDead) continue;
           
+          // 적별 히트 쿨타임 체크 (같은 적을 연속으로 타격하지 않도록)
+          if (weapon.hitCooldowns && weapon.hitCooldowns.has(enemy)) {
+            const cooldown = weapon.hitCooldowns.get(enemy);
+            if (cooldown > 0) continue; // 쿨타임이 남아있으면 스킵
+          }
+          
           // 히트박스 기반 충돌 검사
           const enemyHitbox = CollisionSystem.getHitbox(enemy, 'enemy');
           
@@ -1222,6 +1241,12 @@ const SkillSystem = {
           )) {
             const isCrit = Math.random() < stats.critRate;
             const damage = isCrit ? stats.attack * stats.critDamage : stats.attack;
+            
+            // 적별 히트 쿨타임 설정 (0.1초, 같은 적을 연속으로 타격하지 않도록)
+            if (!weapon.hitCooldowns) {
+              weapon.hitCooldowns = new Map();
+            }
+            weapon.hitCooldowns.set(enemy, 0.1);
             
             enemy.hp -= damage;
             

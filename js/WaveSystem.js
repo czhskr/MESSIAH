@@ -62,7 +62,7 @@ const WaveSystem = {
     let maxWave = 10; // 기본값
     
     if (stage === 2) {
-      maxWave = 20; // 스테이지 2: 20웨이브
+      maxWave = 10; // 스테이지 2: 10웨이브
     } else if (stage === 99) {
       maxWave = 999; // 테스트 스테이지: 무제한
     }

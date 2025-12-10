@@ -48,6 +48,7 @@ let lastTime = 0;
 let animationFrameId = null;
 let currentBgm = null;
 let bgmFadeInterval = null;
+let titleBgmStarted = false; // 타이틀 BGM 재생 상태
 
 /**
  * BGM 재생 (다른 BGM은 자동 정지)
@@ -355,19 +356,60 @@ const GameSettings = {
 };
 
 function setupUI() {
-  // 타이틀 화면
+  // 타이틀 BGM 재생 함수 (사용자 상호작용 후)
+  function startTitleBgm() {
+    if (!titleBgmStarted) {
+      titleBgmStarted = true;
+      playBgm('audio/title.mp3', 0.6);
+    }
+  }
+  
+  // 타이틀 화면 클릭 시 BGM 재생
+  const titleScreen = document.getElementById('titleScreen');
+  if (titleScreen) {
+    titleScreen.addEventListener('click', startTitleBgm, { once: true });
+  }
+  
+  // 타이틀 화면 - 게임시작 버튼 클릭 시 다른 버튼들 표시
   document.getElementById('startBtn').addEventListener('click', () => {
+    startTitleBgm();
+    
+    // 도움말과 옵션 버튼 표시
+    const helpBtn = document.getElementById('helpBtn');
+    const optionBtn = document.getElementById('optionBtn');
+    
+    if (helpBtn && helpBtn.style.display === 'none') {
+      helpBtn.style.display = 'block';
+      helpBtn.style.opacity = '0';
+      helpBtn.style.transition = 'opacity 0.3s';
+      setTimeout(() => {
+        helpBtn.style.opacity = '1';
+      }, 10);
+    }
+    
+    if (optionBtn && optionBtn.style.display === 'none') {
+      optionBtn.style.display = 'block';
+      optionBtn.style.opacity = '0';
+      optionBtn.style.transition = 'opacity 0.3s';
+      setTimeout(() => {
+        optionBtn.style.opacity = '1';
+      }, 10);
+    }
+    
+    // 스테이지 선택 화면으로 이동
     showScreen('stageSelect');
     updateStageList();
   });
   
   // 옵션 버튼
   document.getElementById('optionBtn')?.addEventListener('click', () => {
+    startTitleBgm();
     showOptionScreen();
   });
   
   // 도움말 버튼
   document.getElementById('helpBtn')?.addEventListener('click', () => {
+    startTitleBgm();
     showHelpScreen();
   });
   
@@ -549,9 +591,12 @@ function showScreen(screenName) {
       gameLoop(0);
     }
   }
-  // 타이틀 화면이면 타이틀 BGM 재생
+  // 타이틀 화면이면 타이틀 BGM 재생 (사용자 상호작용 후에만)
   if (screenName === 'title') {
-    playBgm('audio/title.mp3', 0.6);
+    // 이미 사용자 상호작용이 있었으면 즉시 재생
+    if (titleBgmStarted) {
+      playBgm('audio/title.mp3', 0.6);
+    }
   }
 }
 
@@ -1956,18 +2001,23 @@ function checkCollisions(dt) {
         }
       }
       
-      // 플레이어와 보스 충돌 검사 (1초 쿨타임)
+      // 플레이어와 보스 충돌 검사
+      // 미카엘 대쉬 중일 때는 쿨타임을 짧게 설정하여 연속 데미지 가능
+      const isMichaelDashing = boss.name === 'michael' && boss.isDashing;
+      const cooldownCheck = isMichaelDashing ? boss.contactDamageCooldown <= 0.1 : boss.contactDamageCooldown <= 0;
+      
       if (CollisionSystem.checkAABB(
         playerHitbox.x, playerHitbox.y, playerHitbox.w, playerHitbox.h,
         bossHitbox.x, bossHitbox.y, bossHitbox.w, bossHitbox.h
-      ) && !Player.isInvincible && boss.contactDamageCooldown <= 0) {
+      ) && !Player.isInvincible && cooldownCheck) {
         // 미카엘 대쉬 중일 때 데미지 증가
         let damage = boss.damage;
-        if (boss.name === 'michael' && boss.isDashing) {
+        if (isMichaelDashing) {
           damage = boss.damage * 5; // 대쉬 중 데미지 5배 증가
         }
         const isDead = Player.takeDamage(damage);
-        boss.contactDamageCooldown = 1.0;
+        // 대쉬 중일 때는 쿨타임을 짧게 설정 (0.1초), 일반 상태는 1초
+        boss.contactDamageCooldown = isMichaelDashing ? 0.1 : 1.0;
         if (isDead) {
           handleGameOver('플레이어가 사망했습니다.');
         }

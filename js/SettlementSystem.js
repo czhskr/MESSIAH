@@ -93,6 +93,10 @@ const SettlementSystem = {
     this.applyUpgrade(upgradeKey);
     GameState.skillPoints--;
     
+    // 스킬포인트 사용 시 스킬 선택지 즉시 초기화
+    this.selectedUpgrade = null;
+    this.generateUpgradeChoices();
+    
     // UI 업데이트
     this.updateSettlementUI();
     
