@@ -2013,25 +2013,25 @@ function checkCollisions(dt) {
         }
       }
       
-      // 플레이어와 보스 충돌 검사
-      // 미카엘 대쉬 중일 때는 쿨타임을 짧게 설정하여 연속 데미지 가능
-      const isMichaelDashing = boss.name === 'michael' && boss.isDashing;
-      const cooldownCheck = isMichaelDashing ? boss.contactDamageCooldown <= 0.1 : boss.contactDamageCooldown <= 0;
-      
-      if (CollisionSystem.checkAABB(
-        playerHitbox.x, playerHitbox.y, playerHitbox.w, playerHitbox.h,
-        bossHitbox.x, bossHitbox.y, bossHitbox.w, bossHitbox.h
-      ) && !Player.isInvincible && cooldownCheck) {
-        // 미카엘 대쉬 중일 때 데미지 증가
-        let damage = boss.damage;
-        if (isMichaelDashing) {
-          damage = boss.damage * 5; // 대쉬 중 데미지 5배 증가
-        }
-        const isDead = Player.takeDamage(damage);
-        // 대쉬 중일 때는 쿨타임을 짧게 설정 (0.1초), 일반 상태는 1초
-        boss.contactDamageCooldown = isMichaelDashing ? 0.1 : 1.0;
-        if (isDead) {
-          handleGameOver('플레이어가 사망했습니다.');
+      // 플레이어와 보스 충돌 검사 (일반 적 충돌 검사와 동일한 히트박스 방식)
+      const hitBoss = CollisionSystem.checkPlayerBossCollision(Player, BossSystem.activeBosses);
+      if (hitBoss && hitBoss === boss && !Player.isInvincible) {
+        // 미카엘 대쉬 중일 때는 쿨타임을 짧게 설정하여 연속 데미지 가능
+        const isMichaelDashing = boss.name === 'michael' && boss.isDashing;
+        const cooldownCheck = isMichaelDashing ? boss.contactDamageCooldown <= 0.1 : boss.contactDamageCooldown <= 0;
+        
+        if (cooldownCheck) {
+          // 미카엘 대쉬 중일 때 데미지 증가
+          let damage = boss.damage;
+          if (isMichaelDashing) {
+            damage = boss.damage * 5; // 대쉬 중 데미지 5배 증가
+          }
+          const isDead = Player.takeDamage(damage);
+          // 대쉬 중일 때는 쿨타임을 짧게 설정 (0.1초), 일반 상태는 1초
+          boss.contactDamageCooldown = isMichaelDashing ? 0.1 : 1.0;
+          if (isDead) {
+            handleGameOver('플레이어가 사망했습니다.');
+          }
         }
       }
     }
