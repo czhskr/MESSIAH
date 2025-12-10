@@ -18,7 +18,7 @@ const Enemy = {
     malakh: {
       name: '말라크',
       category: 'angel',
-      baseHp: 50,
+      baseHp: 30,
       baseDamage: 5,
       baseSpeed: 150, // 이동 속도 (빠르게)
       baseGold: 2,
@@ -37,7 +37,7 @@ const Enemy = {
     power: {
       name: '파워',
       category: 'angel',
-      baseHp: 80,
+      baseHp: 50,
       baseDamage: 7,
       baseSpeed: 180, // 이동 속도 (빠르게)
       baseGold: 3,
@@ -61,7 +61,7 @@ const Enemy = {
       category: 'angel',
       baseHp: 120,
       baseDamage: 8,
-      baseSpeed: 150, // 이동 속도 (빠르게)
+      baseSpeed: 110, // 이동 속도 (빠르게)
       baseGold: 4,
       exp: 10,
       width: 130, // 충돌 판정 크기
